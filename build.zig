@@ -12,6 +12,10 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    buildExe(b, "fib-c", "examples/fib.c", .{
+        .target = target,
+        .optimize = optimize,
+    });
 
     // --------------------------------------------------
     buildTest(b, .{
@@ -30,7 +34,7 @@ fn buildTest(b: *std.Build, info: BuildInfo) void {
         .target = info.target,
         .optimize = info.optimize,
         .root_source_file = .{
-            .path = "examples/hello.zig",
+            .path = "examples/test.zig",
         },
     });
     unit_test.addIncludePath("include");

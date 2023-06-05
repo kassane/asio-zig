@@ -99,7 +99,8 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
     const run_step = b.step(b.fmt("{s}", .{name}), b.fmt("Run the {s} app", .{name}));
     run_step.dependOn(&run_cmd.step);
 }
-fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.Compiletep {
+
+fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
     const libasio_dep = b.dependency("asio", .{
         .target = info.target,
         .optimize = info.optimize,

@@ -35,8 +35,19 @@ fn buildTest(b: *std.Build, info: BuildInfo) void {
     });
     unit_test.addIncludePath("include");
     unit_test.linkLibrary(asio_c);
-    if (info.target.isWindows())
+    if (info.target.isWindows()) {
+        const libpthreads_dep = b.dependency("winpthreads", .{
+            // .target = info.target,
+            .optimize = info.optimize,
+        });
+        const libpthreads = libpthreads_dep.artifact("winpthreads");
+        unit_test.linkLibrary(libpthreads);
+        for (libpthreads.include_dirs.items) |include| {
+            unit_test.include_dirs.append(include) catch {};
+        }
+        unit_test.want_lto = false;
         unit_test.linkSystemLibrary("ws2_32");
+    }
     unit_test.linkLibC();
 
     const run_unit_tests = b.addRunArtifact(unit_test);
@@ -61,10 +72,19 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
     });
     exe.addIncludePath("include");
     exe.linkLibrary(asio_c);
+
     if (info.target.isWindows()) {
+        const libpthreads_dep = b.dependency("winpthreads", .{
+            // .target = info.target,
+            .optimize = info.optimize,
+        });
+        const libpthreads = libpthreads_dep.artifact("winpthreads");
+        exe.linkLibrary(libpthreads);
+        exe.installLibraryHeaders(libpthreads);
         exe.want_lto = false;
         exe.linkSystemLibrary("ws2_32");
     }
+
     exe.linkLibC();
 
     b.installArtifact(exe);
@@ -79,6 +99,7 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
     const run_step = b.step(b.fmt("{s}", .{name}), b.fmt("Run the {s} app", .{name}));
     run_step.dependOn(&run_cmd.step);
 }
+
 fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
     const libasio_dep = b.dependency("asio", .{
         .target = info.target,

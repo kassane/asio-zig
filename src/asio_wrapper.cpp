@@ -3,9 +3,13 @@
 #include <asio/static_thread_pool.hpp>
 #include <asio/strand.hpp>
 #include <atomic>
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <thread>
+#ifdef WIN32
+#include <windows.h>
+#endif
 
 struct AsioWrapper {
   asio::io_context io_context;
@@ -39,7 +43,15 @@ struct AsioWrapper {
 
 extern "C" {
 AsioWrapperHandle asio_init() {
-  AsioWrapper *wrapper = new AsioWrapper(std::thread::hardware_concurrency());
+  std::size_t n_threads = 1;
+  #ifdef WIN32
+    SYSTEM_INFO sys_info;
+    GetSystemInfo(&sys_info);
+    n_threads = sys_info.dwNumberOfProcessors;
+  #else
+    n_threads = std::thread::hardware_concurrency();
+  #endif
+  AsioWrapper *wrapper = new AsioWrapper(n_threads);
   return static_cast<AsioWrapperHandle>(wrapper);
 }
 

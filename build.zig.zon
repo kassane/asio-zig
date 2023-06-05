@@ -7,5 +7,9 @@
             .url = "https://github.com/kassane/asio/archive/refs/tags/1.28.0.tar.gz",
             .hash = "122088a3877c50fb7c4659506f733dcac17a945ddd20f1a640855314522f19d8186e",
         },
+        .winpthreads = .{
+            .url = "https://github.com/kassane/winpthreads-zigbuild/archive/6d2c65913c41d22a9c57596c86fba3e079a809e7.tar.gz",
+            .hash = "122071e628085620f4abbf39c99bfd6fd07de1a50b6ef7ecc719e41331488a7e17c3",
+        },
     },
 }

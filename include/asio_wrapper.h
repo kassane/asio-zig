@@ -9,7 +9,7 @@ extern "C" {
 typedef void* AsioWrapperHandle;
 
 // Function to initialize the Asio wrapper
-AsioWrapperHandle asio_init();
+AsioWrapperHandle asio_init(void);
 
 // Function to run the event loop
 void asio_run(AsioWrapperHandle handle);

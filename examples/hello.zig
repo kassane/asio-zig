@@ -7,7 +7,7 @@ test "io_context" {
     asio.asio_run(handle);
     asio.asio_post(handle, &task1, @intToPtr(?*anyopaque, @ptrToInt("Hello from task 1")));
 
-    std.os.nanosleep(0, 10000);
+    std.time.sleep(10000);
     asio.asio_stop(handle);
     asio.asio_destroy(handle);
 }

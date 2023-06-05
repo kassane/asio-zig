@@ -20,7 +20,7 @@ jobs:
       
       
       - name: Build - Zig test
-        run: zig build test -fsummary -freference-trace
+        run: zig build test -freference-trace
 
       - name: Build Summary
         run: zig build -fsummary -freference-trace

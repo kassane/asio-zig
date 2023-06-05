@@ -83,6 +83,8 @@ fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.Step.Compile {
         .target = info.target,
         .optimize = info.optimize,
     });
+    if (info.target.isWindows())
+        lib.defineCMacro("_WIN32_WINDOWS", null);
     lib.addIncludePath("include");
     lib.addCSourceFile("src/asio_wrapper.cpp", &.{
         "-Wall",

@@ -36,11 +36,11 @@ fn buildTest(b: *std.Build, info: BuildInfo) void {
     unit_test.addIncludePath("include");
     unit_test.linkLibrary(asio_c);
     if (info.target.isWindows()) {
-        const libapthreads_dep = b.dependency("winpthreads", .{
-            .target = info.target,
+        const libpthreads_dep = b.dependency("winpthreads", .{
+            // .target = info.target,
             .optimize = info.optimize,
         });
-        const libpthreads = libapthreads_dep.artifact("winpthreads");
+        const libpthreads = libpthreads_dep.artifact("winpthreads");
         unit_test.linkLibrary(libpthreads);
         for (libpthreads.include_dirs.items) |include| {
             unit_test.include_dirs.append(include) catch {};
@@ -74,11 +74,11 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
     exe.linkLibrary(asio_c);
 
     if (info.target.isWindows()) {
-        const libapthreads_dep = b.dependency("winpthreads", .{
-            .target = info.target,
+        const libpthreads_dep = b.dependency("winpthreads", .{
+            // .target = info.target,
             .optimize = info.optimize,
         });
-        const libpthreads = libapthreads_dep.artifact("winpthreads");
+        const libpthreads = libpthreads_dep.artifact("winpthreads");
         exe.linkLibrary(libpthreads);
         exe.installLibraryHeaders(libpthreads);
         exe.want_lto = false;

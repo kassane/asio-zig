@@ -8,8 +8,8 @@
             .hash = "122088a3877c50fb7c4659506f733dcac17a945ddd20f1a640855314522f19d8186e",
         },
         .winpthreads = .{
-            .url = "https://github.com/kassane/winpthreads-zigbuild/archive/cdbaed04251d2311aecb06817432440d7eb9dcd7.tar.gz",
-            .hash = "12207847b9248c8c7f7bd09914ef715457d0fe94bea997e1fdccb962b49eb55294b0",
+            .url = "https://github.com/kassane/winpthreads-zigbuild/archive/6d2c65913c41d22a9c57596c86fba3e079a809e7.tar.gz",
+            .hash = "122071e628085620f4abbf39c99bfd6fd07de1a50b6ef7ecc719e41331488a7e17c3",
         },
     },
 }

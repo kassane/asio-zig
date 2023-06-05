@@ -2,7 +2,10 @@ const std = @import("std");
 const testing = std.testing;
 const asio = @cImport(@cInclude("asio_wrapper.h"));
 
-test "io_context" {
+test {
+    testing.refAllDeclsRecursive(@This());
+}
+test "Task runner" {
     var handle: asio.AsioWrapperHandle = asio.asio_init();
     asio.asio_run(handle);
     asio.asio_post(handle, &task1, @intToPtr(?*anyopaque, @ptrToInt("Hello from task 1")));

@@ -14,21 +14,28 @@ pub fn build(b: *std.Build) void {
     });
 
     // --------------------------------------------------
-    const asio_c = buildCAsio(b, .{
+    buildTest(b, .{
         .target = target,
         .optimize = optimize,
     });
+}
+
+fn buildTest(b: *std.Build, info: BuildInfo) void {
+    const asio_c = buildCAsio(b, .{
+        .target = info.target,
+        .optimize = info.optimize,
+    });
 
     const unit_test = b.addTest(.{
-        .target = target,
-        .optimize = optimize,
+        .target = info.target,
+        .optimize = info.optimize,
         .root_source_file = .{
             .path = "examples/hello.zig",
         },
     });
     unit_test.addIncludePath("include");
     unit_test.linkLibrary(asio_c);
-    if (target.isWindows())
+    if (info.target.isWindows())
         unit_test.linkSystemLibrary("ws2_32");
     unit_test.linkLibC();
 
@@ -36,7 +43,6 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
 }
-
 fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildInfo) void {
     const asio_c = buildCAsio(b, .{
         .target = info.target,
@@ -55,8 +61,10 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
     });
     exe.addIncludePath("include");
     exe.linkLibrary(asio_c);
-    if (info.target.isWindows())
+    if (info.target.isWindows()) {
+        exe.want_lto = false;
         exe.linkSystemLibrary("ws2_32");
+    }
     exe.linkLibC();
 
     b.installArtifact(exe);

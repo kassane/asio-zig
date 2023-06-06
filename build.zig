@@ -40,11 +40,7 @@ fn buildTest(b: *std.Build, info: BuildInfo) void {
     unit_test.addIncludePath("include");
     unit_test.linkLibrary(asio_c);
     if (info.target.isWindows()) {
-        const libpthreads_dep = b.dependency("winpthreads", .{
-            // .target = info.target,
-            .optimize = info.optimize,
-        });
-        const libpthreads = libpthreads_dep.artifact("winpthreads");
+        const libpthreads = windpthreads(b, info);
         unit_test.linkLibrary(libpthreads);
         for (libpthreads.include_dirs.items) |include| {
             unit_test.include_dirs.append(include) catch {};
@@ -78,13 +74,11 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
     exe.linkLibrary(asio_c);
 
     if (info.target.isWindows()) {
-        const libpthreads_dep = b.dependency("winpthreads", .{
-            // .target = info.target,
-            .optimize = info.optimize,
-        });
-        const libpthreads = libpthreads_dep.artifact("winpthreads");
+        const libpthreads = windpthreads(b, info);
         exe.linkLibrary(libpthreads);
-        exe.installLibraryHeaders(libpthreads);
+        for (libpthreads.include_dirs.items) |include| {
+            exe.include_dirs.append(include) catch {};
+        }
         exe.want_lto = false;
         exe.linkSystemLibrary("ws2_32");
     }
@@ -125,9 +119,20 @@ fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
         "-Werror",
     });
     lib.linkLibrary(libasio);
-    lib.installLibraryHeaders(libasio); // get copy asio include
+    for (libasio.include_dirs.items) |include| {
+        lib.include_dirs.append(include) catch {};
+    }
     lib.linkLibCpp(); //llvm-libcxx
     return lib;
+}
+
+fn windpthreads(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
+    const libpthreads_dep = b.dependency("winpthreads", .{
+        // .target = info.target,
+        .optimize = info.optimize,
+    });
+    const libpthreads = libpthreads_dep.artifact("winpthreads");
+    return libpthreads;
 }
 
 const BuildInfo = struct {

@@ -1,11 +1,8 @@
 #include "asio_wrapper.h"
 #include <asio/io_context.hpp>
 #include <asio/static_thread_pool.hpp>
-#include <asio/strand.hpp>
-#include <atomic>
-#include <cstddef>
+#include <asio/post.hpp>
 #include <cstdio>
-#include <cstdlib>
 #include <thread>
 #ifdef WIN32
 #include <windows.h>

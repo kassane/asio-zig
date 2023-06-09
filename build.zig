@@ -16,6 +16,10 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    buildExe(b, "stream-c", "examples/stream.c", .{
+        .target = target,
+        .optimize = optimize,
+    });
 
     // --------------------------------------------------
     buildTest(b, .{

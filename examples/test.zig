@@ -11,7 +11,7 @@ test "Task runner" {
     asio.asio_run(handle);
     defer asio.asio_destroy(handle);
 
-    asio.asio_post(handle, &taskHello, @intToPtr(?*anyopaque, @ptrToInt("Hello from task 1")));
+    asio.asio_post_strand(handle, &taskHello, @intToPtr(?*anyopaque, @ptrToInt("Hello from task 1")));
 
     std.time.sleep(10000);
     asio.asio_stop(handle);
@@ -27,7 +27,7 @@ test "Fibonacci" {
         //40, 50, 60, // slow
     };
     for (0..values.len) |i| {
-        asio.asio_post(handle, &fibTask, @intToPtr(?*anyopaque, @ptrToInt(&values[i])));
+        asio.asio_post_pool(handle, &fibTask, @intToPtr(?*anyopaque, @ptrToInt(&values[i])));
     }
 }
 

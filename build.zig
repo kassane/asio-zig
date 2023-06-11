@@ -133,6 +133,7 @@ fn windpthreads(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
         .optimize = info.optimize,
     });
     const libpthreads = libpthreads_dep.artifact("winpthreads");
+    libpthreads.bundle_compiler_rt = false;
     return libpthreads;
 }
 

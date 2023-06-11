@@ -8,7 +8,7 @@ void task1(void* arg) { printf("Task 1: %s\n", (const char*)arg); }
 void task2(void* arg) { printf("Task 2: %s\n", (const char*)arg); }
 
 int main() {
-  AsioWrapperHandle handle = asio_init();
+  AsioWrapperHandle handle = asio_init(get_maxCPU());
   asio_run(handle);
 
   asio_post_strand(handle, task1, "Hello from task 1");

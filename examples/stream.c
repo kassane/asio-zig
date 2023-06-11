@@ -21,7 +21,7 @@ void send_data(void* arg) {
 }
 
 int main() {
-  AsioWrapperHandle handle = asio_init();
+  AsioWrapperHandle handle = asio_init(get_maxCPU());
   if (!handle) {
     printf("Failed to initialize AsioWrapper\n");
     return -1;

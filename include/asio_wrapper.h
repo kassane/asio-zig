@@ -11,7 +11,7 @@ extern "C" {
 typedef void* AsioWrapperHandle;
 
 // Function to initialize the Asio wrapper
-AsioWrapperHandle asio_init(void);
+AsioWrapperHandle asio_init(size_t num_threads);
 
 // Function to run the event loop
 void asio_run(AsioWrapperHandle handle);
@@ -34,6 +34,9 @@ void asio_write(AsioWrapperHandle handle, const char* data, size_t size);
 // Read data from a stream
 void asio_read(AsioWrapperHandle handle, void (*callback)(const char*, size_t),
                size_t size);
+
+// Get max CPUs Core
+size_t get_maxCPU(void);
 
 #ifdef __cplusplus
 }

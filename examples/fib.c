@@ -21,7 +21,7 @@ void fibonacci_task(void* arg) {
 
 int main() {
   // Initialize the ASIO wrapper
-  AsioWrapperHandle handle = asio_init();
+  AsioWrapperHandle handle = asio_init(get_maxCPU());
 
   // Calculate Fibonacci numbers asynchronously
   unsigned int n1 = 40;

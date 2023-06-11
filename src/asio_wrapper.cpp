@@ -1,30 +1,43 @@
 #include "asio_wrapper.h"
 
 #include <asio/io_context.hpp>
-#include <asio/posix/stream_descriptor.hpp>
 #include <asio/post.hpp>
 #include <asio/read.hpp>
 #include <asio/static_thread_pool.hpp>
 #include <asio/strand.hpp>
 #include <asio/write.hpp>
+#include <cstddef>
 #include <cstdio>
 #include <thread>
+
 #ifdef WIN32
 #include <windows.h>
+#else
+#include <asio/posix/stream_descriptor.hpp>
+using streamer = asio::posix::stream_descriptor;
 #endif
 
 struct AsioWrapper {
   asio::io_context io_context;
   asio::static_thread_pool thread_pool;
   std::atomic<bool> stop_flag;
-  asio::posix::stream_descriptor stream;
+  #ifndef WIN32
+    streamer stream;
+  #endif
   asio::strand<asio::io_context::executor_type> strand;
 
+#ifdef WIN32
+  AsioWrapper(std::size_t thread_pool_size) noexcept
+      : thread_pool(thread_pool_size),
+        stop_flag(false),
+        strand(io_context.get_executor()) {}
+#else
   AsioWrapper(std::size_t thread_pool_size) noexcept
       : thread_pool(thread_pool_size),
         stop_flag(false),
         stream(io_context),
         strand(io_context.get_executor()) {}
+#endif
 
   ~AsioWrapper() noexcept {
     stop();
@@ -51,7 +64,7 @@ struct AsioWrapper {
   void post_task_strand(void (*task)(void*), void* arg) noexcept {
     asio::post(strand, [task, arg]() { task(arg); });
   }
-
+#ifndef WIN32
   void write(const char* data, std::size_t size) noexcept {
     asio::post(strand, [this, data, size]() {
       asio::async_write(stream, asio::buffer(data, size),
@@ -82,19 +95,12 @@ struct AsioWrapper {
                        });
     });
   }
+#endif
 };
 
 extern "C" {
-AsioWrapperHandle asio_init() {
-  std::size_t n_threads = 1;
-#ifdef WIN32
-  SYSTEM_INFO sys_info;
-  GetSystemInfo(&sys_info);
-  n_threads = sys_info.dwNumberOfProcessors;
-#else
-  n_threads = std::thread::hardware_concurrency();
-#endif
-  AsioWrapper* wrapper = new AsioWrapper(n_threads);
+AsioWrapperHandle asio_init(size_t num_threads) {
+  AsioWrapper* wrapper = new AsioWrapper(num_threads);
   return static_cast<AsioWrapperHandle>(wrapper);
 }
 
@@ -134,18 +140,32 @@ void asio_post_strand(AsioWrapperHandle handle, void (*task)(void*),
   }
 }
 
-void asio_write(AsioWrapperHandle handle, const char* data, std::size_t size) {
-  AsioWrapper* wrapper = static_cast<AsioWrapper*>(handle);
-  if (wrapper) {
-    wrapper->write(data, size);
+#ifndef WIN32
+  void asio_write(AsioWrapperHandle handle, const char* data, std::size_t size) {
+    AsioWrapper* wrapper = static_cast<AsioWrapper*>(handle);
+    if (wrapper) {
+      wrapper->write(data, size);
+    }
   }
-}
 
-void asio_read(AsioWrapperHandle handle,
-               void (*callback)(const char*, std::size_t), std::size_t size) {
-  AsioWrapper* wrapper = static_cast<AsioWrapper*>(handle);
-  if (wrapper) {
-    wrapper->read(callback, size);
+  void asio_read(AsioWrapperHandle handle,
+                void (*callback)(const char*, std::size_t), std::size_t size) {
+    AsioWrapper* wrapper = static_cast<AsioWrapper*>(handle);
+    if (wrapper) {
+      wrapper->read(callback, size);
+    }
   }
-}
+#endif
+
+  size_t get_maxCPU(void) {
+    size_t n_threads = 1;
+  #ifdef WIN32
+    SYSTEM_INFO sys_info;
+    GetSystemInfo(&sys_info);
+    n_threads = sys_info.dwNumberOfProcessors;
+  #else
+    n_threads = std::thread::hardware_concurrency();
+  #endif
+    return n_threads;
+  }
 }

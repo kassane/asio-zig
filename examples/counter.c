@@ -9,7 +9,7 @@ void timerTask(void* arg) {
 }
 
 int main() {
-  AsioWrapperHandle handle = asio_init();
+  AsioWrapperHandle handle = asio_init(get_maxCPU());
   asio_run(handle);
 
   int counter = 0;

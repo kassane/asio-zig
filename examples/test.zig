@@ -6,7 +6,9 @@ test "Semantic Analyzer" {
     testing.refAllDeclsRecursive(@This());
 }
 test "Task runner" {
-    const handle: asio.AsioWrapperHandle = asio.asio_init();
+    const num_cpus = try std.Thread.getCpuCount();
+
+    const handle: asio.AsioWrapperHandle = asio.asio_init(num_cpus);
 
     asio.asio_run(handle);
     defer asio.asio_destroy(handle);
@@ -18,7 +20,7 @@ test "Task runner" {
 }
 
 test "Fibonacci" {
-    const handle: asio.AsioWrapperHandle = asio.asio_init();
+    const handle: asio.AsioWrapperHandle = asio.asio_init(asio.get_maxCPU());
 
     asio.asio_run(handle);
     defer asio.asio_destroy(handle);

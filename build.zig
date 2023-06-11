@@ -16,7 +16,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    buildExe(b, "stream-c", "examples/stream.c", .{
+    if (!target.isWindows()) buildExe(b, "stream-c", "examples/stream.c", .{
         .target = target,
         .optimize = optimize,
     });
@@ -44,11 +44,6 @@ fn buildTest(b: *std.Build, info: BuildInfo) void {
     unit_test.addIncludePath("include");
     unit_test.linkLibrary(asio_c);
     if (info.target.isWindows()) {
-        const libpthreads = windpthreads(b, info);
-        unit_test.linkLibrary(libpthreads);
-        for (libpthreads.include_dirs.items) |include| {
-            unit_test.include_dirs.append(include) catch {};
-        }
         unit_test.want_lto = false;
         unit_test.linkSystemLibrary("ws2_32");
     }
@@ -78,11 +73,6 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
     exe.linkLibrary(asio_c);
 
     if (info.target.isWindows()) {
-        const libpthreads = windpthreads(b, info);
-        exe.linkLibrary(libpthreads);
-        for (libpthreads.include_dirs.items) |include| {
-            exe.include_dirs.append(include) catch {};
-        }
         exe.want_lto = false;
         exe.linkSystemLibrary("ws2_32");
     }
@@ -114,8 +104,15 @@ fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
         .target = info.target,
         .optimize = info.optimize,
     });
-    if (info.target.isWindows())
+    lib.defineCMacro("ASIO_HAS_PTHREADS", null);
+    if (info.target.isWindows()) {
+        const libpthreads = windpthreads(b, info);
+        lib.linkLibrary(libpthreads);
+        for (libpthreads.include_dirs.items) |include| {
+            lib.include_dirs.append(include) catch {};
+        }
         lib.defineCMacro("_WIN32_WINDOWS", null);
+    }
     lib.addIncludePath("include");
     lib.addCSourceFile("src/asio_wrapper.cpp", &.{
         "-Wall",

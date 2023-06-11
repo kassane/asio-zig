@@ -6,19 +6,21 @@ test "Semantic Analyzer" {
     testing.refAllDeclsRecursive(@This());
 }
 test "Task runner" {
-    const handle: asio.AsioWrapperHandle = asio.asio_init();
+    const num_cpus = try std.Thread.getCpuCount();
+
+    const handle: asio.AsioWrapperHandle = asio.asio_init(num_cpus);
 
     asio.asio_run(handle);
     defer asio.asio_destroy(handle);
 
-    asio.asio_post(handle, &taskHello, @intToPtr(?*anyopaque, @ptrToInt("Hello from task 1")));
+    asio.asio_post_strand(handle, &taskHello, @intToPtr(?*anyopaque, @ptrToInt("Hello from task 1")));
 
     std.time.sleep(10000);
     asio.asio_stop(handle);
 }
 
 test "Fibonacci" {
-    const handle: asio.AsioWrapperHandle = asio.asio_init();
+    const handle: asio.AsioWrapperHandle = asio.asio_init(asio.get_maxCPU());
 
     asio.asio_run(handle);
     defer asio.asio_destroy(handle);
@@ -27,7 +29,7 @@ test "Fibonacci" {
         //40, 50, 60, // slow
     };
     for (0..values.len) |i| {
-        asio.asio_post(handle, &fibTask, @intToPtr(?*anyopaque, @ptrToInt(&values[i])));
+        asio.asio_post_pool(handle, &fibTask, @intToPtr(?*anyopaque, @ptrToInt(&values[i])));
     }
 }
 

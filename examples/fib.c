@@ -1,6 +1,7 @@
-#include "asio_wrapper.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "asio_wrapper.h"
 
 // Fibonacci calculation function
 unsigned long long fibonacci(unsigned int n) {
@@ -20,16 +21,16 @@ void fibonacci_task(void* arg) {
 
 int main() {
   // Initialize the ASIO wrapper
-  AsioWrapperHandle handle = asio_init();
+  AsioWrapperHandle handle = asio_init(get_maxCPU());
 
   // Calculate Fibonacci numbers asynchronously
   unsigned int n1 = 40;
   unsigned int n2 = 45;
   unsigned int n3 = 50;
 
-  asio_post(handle, fibonacci_task, &n1);
-  asio_post(handle, fibonacci_task, &n2);
-  asio_post(handle, fibonacci_task, &n3);
+  asio_post_pool(handle, fibonacci_task, &n1);
+  asio_post_pool(handle, fibonacci_task, &n2);
+  asio_post_pool(handle, fibonacci_task, &n3);
 
   // Run the ASIO event-loop
   asio_run(handle);

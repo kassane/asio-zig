@@ -20,7 +20,6 @@ jobs:
       
       
       - name: Build - Zig test
-        if: (startsWith(matrix.runs-on, 'ubuntu')) || (startsWith(matrix.runs-on, 'macos'))
         run: zig build test -freference-trace
 
       - name: Build Summary

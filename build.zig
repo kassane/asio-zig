@@ -104,20 +104,30 @@ fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
         .target = info.target,
         .optimize = info.optimize,
     });
+    lib.defineCMacro("ASIO_DISABLE_STD_FUTURE", null);
+    lib.defineCMacro("ASIO_DISABLE_STD_THREAD", null);
     lib.defineCMacro("ASIO_HAS_PTHREADS", null);
+    lib.defineCMacro("ASIO_HAS_NOEXCEPT", null);
+    lib.defineCMacro("ASIO_DISABLE_CO_AWAIT", null);
+    if (lib.optimize == .Debug)
+        lib.defineCMacro("ASIO_ENABLE_HANDLER_TRACKING", null);
     if (info.target.isWindows()) {
+        lib.defineCMacro("ASIO_DISABLE_STD_SYSTEM_ERROR", null);
+        lib.defineCMacro("ASIO_DISABLE_STD_EXCEPTION_PTR", null);
+        lib.defineCMacro("_WIN32_WINNT", "0x0A00"); // Win 10
         const libpthreads = windpthreads(b, info);
         lib.linkLibrary(libpthreads);
         for (libpthreads.include_dirs.items) |include| {
             lib.include_dirs.append(include) catch {};
         }
-        lib.defineCMacro("_WIN32_WINDOWS", null);
     }
     lib.addIncludePath("include");
     lib.addCSourceFile("src/asio_wrapper.cpp", &.{
         "-Wall",
         "-Wextra",
-        "-Werror",
+        // "-Werror",
+        // "-Wpedantic",
+        "-std=c++14",
     });
     lib.linkLibrary(libasio);
     for (libasio.include_dirs.items) |include| {

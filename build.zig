@@ -105,7 +105,7 @@ fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
         .optimize = info.optimize,
     });
     lib.defineCMacro("ASIO_DISABLE_STD_FUTURE", null);
-    lib.defineCMacro("ASIO_DISABLE_THREADS", null);
+    lib.defineCMacro("ASIO_DISABLE_STD_THREAD", null);
     lib.defineCMacro("ASIO_HAS_PTHREADS", null);
     lib.defineCMacro("ASIO_HAS_NOEXCEPT", null);
     lib.defineCMacro("ASIO_DISABLE_CO_AWAIT", null);

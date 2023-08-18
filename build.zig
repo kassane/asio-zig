@@ -37,11 +37,10 @@ fn buildTest(b: *std.Build, info: BuildInfo) void {
     const unit_test = b.addTest(.{
         .target = info.target,
         .optimize = info.optimize,
-        .root_source_file = .{
-            .path = "examples/test.zig",
-        },
+        .root_source_file = .{ .path = "examples/test.zig" },
     });
-    unit_test.addIncludePath("include");
+    unit_test.omit_frame_pointer = false;
+    unit_test.addIncludePath(.{ .path = "include" });
     unit_test.linkLibrary(asio_c);
     if (info.target.isWindows()) {
         unit_test.want_lto = false;
@@ -64,12 +63,9 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
         .target = info.target,
         .optimize = info.optimize,
     });
-    exe.addCSourceFile(filepath, &.{
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-    });
-    exe.addIncludePath("include");
+    exe.omit_frame_pointer = false;
+    exe.addCSourceFile(.{ .file = .{ .path = filepath }, .flags = cxxflags });
+    exe.addIncludePath(.{ .path = "include" });
     exe.linkLibrary(asio_c);
 
     if (info.target.isWindows()) {
@@ -104,39 +100,27 @@ fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
         .target = info.target,
         .optimize = info.optimize,
     });
-    lib.defineCMacro("ASIO_HAS_PTHREADS", null);
-    if (info.target.isWindows()) {
-        const libpthreads = windpthreads(b, info);
-        lib.linkLibrary(libpthreads);
-        for (libpthreads.include_dirs.items) |include| {
-            lib.include_dirs.append(include) catch {};
-        }
+    if (lib.optimize == .Debug)
+        lib.defineCMacro("ASIO_ENABLE_HANDLER_TRACKING", null);
+    if (info.target.isWindows())
         lib.defineCMacro("_WIN32_WINDOWS", null);
-    }
-    lib.addIncludePath("include");
-    lib.addCSourceFile("src/asio_wrapper.cpp", &.{
-        "-Wall",
-        "-Wextra",
-        "-Werror",
-    });
-    lib.linkLibrary(libasio);
+    lib.addIncludePath(.{ .path = "include" });
     for (libasio.include_dirs.items) |include| {
         lib.include_dirs.append(include) catch {};
     }
-    lib.linkLibCpp(); //llvm-libcxx
+    lib.addCSourceFile(.{ .file = .{ .path = "src/asio_wrapper.cpp" }, .flags = cxxflags });
+    lib.linkLibrary(libasio);
+    if (lib.target.getAbi() == .msvc)
+        lib.linkLibC()
+    else
+        lib.linkLibCpp(); //llvm-libcxx
     return lib;
 }
 
-fn windpthreads(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
-    const libpthreads_dep = b.dependency("winpthreads", .{
-        // .target = info.target,
-        .optimize = info.optimize,
-    });
-    const libpthreads = libpthreads_dep.artifact("winpthreads");
-    libpthreads.bundle_compiler_rt = false;
-    return libpthreads;
-}
-
+const cxxflags = &.{
+    "-Wall",
+    "-Wextra",
+};
 const BuildInfo = struct {
     optimize: std.builtin.OptimizeMode,
     target: std.zig.CrossTarget,

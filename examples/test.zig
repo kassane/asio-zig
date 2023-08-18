@@ -13,7 +13,7 @@ test "Task runner" {
     asio.asio_run(handle);
     defer asio.asio_destroy(handle);
 
-    asio.asio_post_strand(handle, &taskHello, @intToPtr(?*anyopaque, @ptrToInt("Hello from task 1")));
+    asio.asio_post_strand(handle, &taskHello, @as(?*anyopaque, @ptrFromInt(@intFromPtr("Hello from task 1"))));
 
     std.time.sleep(10000);
     asio.asio_stop(handle);
@@ -29,16 +29,16 @@ test "Fibonacci" {
         //40, 50, 60, // slow
     };
     for (0..values.len) |i| {
-        asio.asio_post_pool(handle, &fibTask, @intToPtr(?*anyopaque, @ptrToInt(&values[i])));
+        asio.asio_post_pool(handle, &fibTask, @as(?*anyopaque, @ptrFromInt(@intFromPtr(&values[i]))));
     }
 }
 
 fn taskHello(arg: ?*anyopaque) callconv(.C) void {
-    std.debug.print("Task 1:\n{s}\n", .{@ptrCast([*:0]const u8, arg)});
+    std.debug.print("Task 1:\n{s}\n", .{@as([*:0]const u8, @ptrCast(arg))});
 }
 
 fn fibTask(arg: ?*anyopaque) callconv(.C) void {
-    const n = @ptrCast(*usize, @alignCast(std.meta.alignment(*usize), arg)).*;
+    const n = @as(*usize, @ptrCast(@alignCast(arg))).*;
     std.debug.print("Fibonacci ({}): {}\n", .{ n, fibonacci(n) });
 }
 fn fibonacci(index: usize) usize {

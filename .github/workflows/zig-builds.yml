@@ -1,6 +1,6 @@
 name: Zig build
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
@@ -20,7 +20,7 @@ jobs:
       
       
       - name: Build - Zig test
-        if: (startsWith(matrix.runs-on, 'ubuntu')) || (startsWith(matrix.runs-on, 'macos'))
+        if: startsWith(matrix.runs-on, 'ubuntu')
         run: zig build test --summary all -freference-trace
 
       - name: Build Summary

@@ -5,7 +5,7 @@ The wrapper provides functions for initializing the ASIO library, running it, st
 
 ### How to build and run
 
-* Need [zig 0.11.0](https://ziglang.org/download) or higher.
+* Need [zig 0.12.0](https://ziglang.org/download) or higher.
 
 ```bash
 # Zig binding test (only)

@@ -16,10 +16,11 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    if (!target.isWindows()) buildExe(b, "stream-c", "examples/stream.c", .{
-        .target = target,
-        .optimize = optimize,
-    });
+    if (target.result.os.tag == .windows)
+        buildExe(b, "stream-c", "examples/stream.c", .{
+            .target = target,
+            .optimize = optimize,
+        });
 
     // --------------------------------------------------
     buildTest(b, .{
@@ -39,10 +40,10 @@ fn buildTest(b: *std.Build, info: BuildInfo) void {
         .optimize = info.optimize,
         .root_source_file = .{ .path = "examples/test.zig" },
     });
-    unit_test.omit_frame_pointer = false;
+    unit_test.root_module.omit_frame_pointer = false;
     unit_test.addIncludePath(.{ .path = "include" });
     unit_test.linkLibrary(asio_c);
-    if (info.target.isWindows()) {
+    if (unit_test.rootModuleTarget().os.tag == .windows) {
         unit_test.want_lto = false;
         unit_test.linkSystemLibrary("ws2_32");
     }
@@ -63,12 +64,12 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
         .target = info.target,
         .optimize = info.optimize,
     });
-    exe.omit_frame_pointer = false;
+    exe.root_module.omit_frame_pointer = false;
     exe.addCSourceFile(.{ .file = .{ .path = filepath }, .flags = cxxflags });
     exe.addIncludePath(.{ .path = "include" });
     exe.linkLibrary(asio_c);
 
-    if (info.target.isWindows()) {
+    if (exe.rootModuleTarget().os.tag == .windows) {
         exe.want_lto = false;
         exe.linkSystemLibrary("ws2_32");
     }
@@ -88,7 +89,7 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
     run_step.dependOn(&run_cmd.step);
 }
 
-fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
+fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.Step.Compile {
     const libasio_dep = b.dependency("asio", .{
         .target = info.target,
         .optimize = info.optimize,
@@ -100,17 +101,17 @@ fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.CompileStep {
         .target = info.target,
         .optimize = info.optimize,
     });
-    if (lib.optimize == .Debug)
+    if (info.optimize == .Debug)
         lib.defineCMacro("ASIO_ENABLE_HANDLER_TRACKING", null);
-    if (info.target.isWindows())
+    if (lib.rootModuleTarget().os.tag == .windows)
         lib.defineCMacro("_WIN32_WINDOWS", null);
     lib.addIncludePath(.{ .path = "include" });
-    for (libasio.include_dirs.items) |include| {
-        lib.include_dirs.append(include) catch {};
+    for (libasio.root_module.include_dirs.items) |include| {
+        lib.root_module.include_dirs.append(b.allocator, include) catch {};
     }
     lib.addCSourceFile(.{ .file = .{ .path = "src/asio_wrapper.cpp" }, .flags = cxxflags });
     lib.linkLibrary(libasio);
-    if (lib.target.getAbi() == .msvc)
+    if (lib.rootModuleTarget().abi == .msvc)
         lib.linkLibC()
     else
         lib.linkLibCpp(); //llvm-libcxx
@@ -123,5 +124,5 @@ const cxxflags = &.{
 };
 const BuildInfo = struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 };

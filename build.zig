@@ -38,14 +38,14 @@ fn buildTest(b: *std.Build, info: BuildInfo) void {
     const unit_test = b.addTest(.{
         .target = info.target,
         .optimize = info.optimize,
-        .root_source_file = .{ .path = "examples/test.zig" },
+        .root_source_file = b.path("examples/test.zig"),
     });
     unit_test.root_module.omit_frame_pointer = false;
-    unit_test.addIncludePath(.{ .path = "include" });
-    unit_test.linkLibrary(asio_c);
+    unit_test.root_module.addIncludePath(b.path("include"));
+    unit_test.root_module.linkLibrary(asio_c);
     if (unit_test.rootModuleTarget().os.tag == .windows) {
         unit_test.want_lto = false;
-        unit_test.linkSystemLibrary("ws2_32");
+        unit_test.root_module.linkSystemLibrary("ws2_32", .{});
     }
     unit_test.linkLibC();
 
@@ -65,13 +65,13 @@ fn buildExe(b: *std.Build, name: []const u8, filepath: []const u8, info: BuildIn
         .optimize = info.optimize,
     });
     exe.root_module.omit_frame_pointer = false;
-    exe.addCSourceFile(.{ .file = .{ .path = filepath }, .flags = cxxflags });
-    exe.addIncludePath(.{ .path = "include" });
-    exe.linkLibrary(asio_c);
+    exe.root_module.addCSourceFile(.{ .file = b.path(filepath), .flags = cxxflags });
+    exe.root_module.addIncludePath(b.path("include"));
+    exe.root_module.linkLibrary(asio_c);
 
     if (exe.rootModuleTarget().os.tag == .windows) {
         exe.want_lto = false;
-        exe.linkSystemLibrary("ws2_32");
+        exe.root_module.linkSystemLibrary("ws2_32", .{});
     }
 
     exe.linkLibC();
@@ -97,20 +97,20 @@ fn buildCAsio(b: *std.Build, info: BuildInfo) *std.Build.Step.Compile {
     const libasio = libasio_dep.artifact("asio");
 
     const lib = b.addStaticLibrary(.{
-        .name = "asio_c",
+        .name = "asio_zig",
         .target = info.target,
         .optimize = info.optimize,
     });
     if (info.optimize == .Debug)
-        lib.defineCMacro("ASIO_ENABLE_HANDLER_TRACKING", null);
+        lib.root_module.addCMacro("ASIO_ENABLE_HANDLER_TRACKING", "1");
     if (lib.rootModuleTarget().os.tag == .windows)
-        lib.defineCMacro("_WIN32_WINDOWS", null);
-    lib.addIncludePath(.{ .path = "include" });
+        lib.root_module.addCMacro("_WIN32_WINDOWS", "");
+    lib.root_module.addIncludePath(b.path("include"));
     for (libasio.root_module.include_dirs.items) |include| {
         lib.root_module.include_dirs.append(b.allocator, include) catch {};
     }
-    lib.addCSourceFile(.{ .file = .{ .path = "src/asio_wrapper.cpp" }, .flags = cxxflags });
-    lib.linkLibrary(libasio);
+    lib.root_module.addCSourceFile(.{ .file = b.path("src/asio_wrapper.cpp"), .flags = cxxflags });
+    lib.root_module.linkLibrary(libasio);
     if (lib.rootModuleTarget().abi == .msvc)
         lib.linkLibC()
     else

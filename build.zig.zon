@@ -1,12 +1,12 @@
 .{
-    .name = "asio_c",
+    .name = "asio_zig",
     .version = "0.1.0",
     .license = "MIT",
     .paths = .{""},
     .dependencies = .{
         .asio = .{
-            .url = "git+https://github.com/kassane/asio#cfec4608112abd44462afbad427d0f2ca3e30199",
-            .hash = "1220926d7e934fcb9e4e55f25e24d17613fbe9b145798581e0ae7ea3679b37f4e44d",
+            .url = "git+https://github.com/kassane/asio#10a3e0c11415f074dd9968b9c0e3a1a05b753f3d",
+            .hash = "12206031ceba4e53cd55ab2ab86d3da470f49f711e75273141ec72faee017a27cb62",
         },
     },
 }
